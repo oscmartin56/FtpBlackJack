@@ -49,7 +49,7 @@ public class ClienteBlackJack extends JFrame implements Runnable {
 
 public void run() {
     try {
-        socket = new Socket("localhost", 44441);
+        socket = new Socket("10.6.4.91", 44441);
         out = new ObjectOutputStream(socket.getOutputStream());
         in = new ObjectInputStream(socket.getInputStream());
 
