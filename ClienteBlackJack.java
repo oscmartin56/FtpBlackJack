@@ -3,62 +3,89 @@ import java.awt.*;
 import java.io.*;
 import java.net.*;
 
+// GUI del juego que implementa Runnable para red en segundo plano (RA3)
 public class ClienteBlackJack extends JFrame implements Runnable {
-    Socket socket;
-    ObjectOutputStream out;
-    ObjectInputStream in;
-    DefaultListModel<String> modJ, modC;
-    JLabel lblSaldo, lblMensaje;
-    JTextField txtApuesta;
+    private Socket socket;
+    private ObjectOutputStream out;
+    private ObjectInputStream in;
+    private JButton btnAp, btnPedir, btnPlan;
+    private DefaultListModel<String> modJ, modC;
+    private JLabel lblSaldo, lblMsg;
+    private JTextField txtAp;
 
     public ClienteBlackJack() {
-        super("BlackJack Real");
+        super("BlackJack Real - PSP");
         setLayout(new BorderLayout());
-        
-        JPanel pnlNorte = new JPanel();
+
+        // Inicialización (Evita el NullPointerException)
+        btnAp = new JButton("Apostar");
+        btnPedir = new JButton("Pedir");
+        btnPlan = new JButton("Plantar");
         lblSaldo = new JLabel("Saldo: 500");
-        txtApuesta = new JTextField("20", 5);
-        JButton btnAp = new JButton("Apostar");
-        pnlNorte.add(lblSaldo); pnlNorte.add(new JLabel("Apuesta:")); pnlNorte.add(txtApuesta); pnlNorte.add(btnAp);
-        
+        lblMsg = new JLabel("Introduce apuesta");
+        txtAp = new JTextField("20", 5);
         modJ = new DefaultListModel<>(); modC = new DefaultListModel<>();
-        JPanel pnlCartas = new JPanel(new GridLayout(1,2));
-        pnlCartas.add(new JScrollPane(new JList<>(modJ)));
-        pnlCartas.add(new JScrollPane(new JList<>(modC)));
-        
-        JPanel pnlSur = new JPanel();
-        lblMensaje = new JLabel("Haz tu apuesta");
-        JButton btnPedir = new JButton("Pedir");
-        JButton btnPlan = new JButton("Plantar");
-        pnlSur.add(lblMensaje); pnlSur.add(btnPedir); pnlSur.add(btnPlan);
-        
-        add(pnlNorte, BorderLayout.NORTH); add(pnlCartas, BorderLayout.CENTER); add(pnlSur, BorderLayout.SOUTH);
 
-        btnAp.addActionListener(e -> enviar(AccionJugador.APOSTAR, Double.parseDouble(txtApuesta.getText())));
-        btnPedir.addActionListener(e -> enviar(AccionJugador.PEDIR, 0));
-        btnPlan.addActionListener(e -> enviar(AccionJugador.PLANTARSE, 0));
+        // Montaje de UI
+        JPanel norte = new JPanel(); norte.add(lblSaldo); norte.add(txtAp); norte.add(btnAp);
+        JPanel centro = new JPanel(new GridLayout(1,2));
+        centro.add(new JScrollPane(new JList<>(modJ)));
+        centro.add(new JScrollPane(new JList<>(modC)));
+        JPanel sur = new JPanel(); sur.add(lblMsg); sur.add(btnPedir); sur.add(btnPlan);
 
-        setSize(500, 400); setVisible(true); setDefaultCloseOperation(3);
+        add(norte, BorderLayout.NORTH); add(centro, BorderLayout.CENTER); add(sur, BorderLayout.SOUTH);
+
+        // Listeners: Envío seguro de objetos (RA4)
+        btnAp.addActionListener(e -> enviar(3, Double.parseDouble(txtAp.getText())));
+        btnPedir.addActionListener(e -> enviar(1, 0));
+        btnPlan.addActionListener(e -> enviar(2, 0));
+
+        setSize(600, 400); setVisible(true); setDefaultCloseOperation(3);
     }
 
     private void enviar(int act, double d) {
-        try { out.writeObject(new AccionJugador(act, d)); } catch(Exception e){}
+        try {
+            out.writeObject(new AccionJugador(act, d));
+            out.flush(); // RA3: Asegura salida de datos
+        } catch(Exception e){ lblMsg.setText("Error de envío."); }
     }
 
-    public void run() {
-        try {
-            socket = new Socket("localhost", 44441);
-            out = new ObjectOutputStream(socket.getOutputStream());
-            in = new ObjectInputStream(socket.getInputStream());
-            while(true) {
-                EstadoJuego ej = (EstadoJuego) in.readObject();
-                lblSaldo.setText("Saldo: " + ej.miSaldo);
-                lblMensaje.setText(ej.mensaje);
-                modJ.clear(); for(String c : ej.misCartas) modJ.addElement(c);
-                modC.clear(); for(String c : ej.cartasCrupier) modC.addElement(c);
-            }
-        } catch(Exception e){}
+    // Dentro de la clase ClienteBlackJack, modifica el método run:
+
+public void run() {
+    try {
+        // RA3: Conexión mediante Socket TCP
+        socket = new Socket("localhost", 44441);
+        out = new ObjectOutputStream(socket.getOutputStream());
+        in = new ObjectInputStream(socket.getInputStream());
+
+        while(true) {
+            // RA3: Recepción de objetos serializados
+            EstadoJuego ej = (EstadoJuego) in.readObject();
+            
+            // Actualización de la GUI
+            lblSaldo.setText("Saldo: " + ej.miSaldo);
+            lblMsg.setText(ej.mensaje);
+            
+            modJ.clear(); 
+            for(String c : ej.misCartas) modJ.addElement(c);
+            
+            modC.clear(); 
+            for(String c : ej.cartasCrupier) modC.addElement(c);
+            
+            // RA4: Protocolo de aplicación - Control funcional de la interfaz
+            // Si la partida NO ha finalizado, habilita PEDIR y PLANTAR
+            btnPedir.setEnabled(!ej.partidaFinalizada);
+            btnPlan.setEnabled(!ej.partidaFinalizada);
+            
+            // El botón Apostar solo se habilita al terminar la ronda
+            btnAp.setEnabled(ej.partidaFinalizada);
+            txtAp.setEditable(ej.partidaFinalizada);
+        }
+    } catch(Exception e){
+        lblMsg.setText("ERROR: Conexión perdida.");
     }
+}
 
     public static void main(String[] args) { new Thread(new ClienteBlackJack()).start(); }
 }

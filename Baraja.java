@@ -1,17 +1,20 @@
+// Lógica de negocio para generar cartas (RA4: Servicio Funcional)
 public class Baraja {
     String[] figuras = {"Picas", "Corazones", "Diamantes", "Treboles"};
     String[] valores = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "As"};
 
+    // Genera una carta aleatoria (Baraja infinita)
     public String sacarCarta() {
-        int figura = (int) (Math.random() * 4); 
-        int valor = (int) (Math.random() * 13); 
-        return valores[valor] + " de " + figuras[figura];
+        int f = (int) (Math.random() * 4); 
+        int v = (int) (Math.random() * 13); 
+        return valores[v] + " de " + figuras[f];
     }
 
+    // Traduce el texto a valor numérico para sumar puntos
     public int valorDe(String carta) {
-        String cart = carta.split(" ")[0];
-        if (cart.equals("As")) return 11;
-        if (cart.equals("J") || cart.equals("Q") || cart.equals("K")) return 10;
-        return Integer.parseInt(cart);
+        String v = carta.split(" ")[0];
+        if (v.equals("As")) return 11;
+        if (v.equals("J") || v.equals("Q") || v.equals("K")) return 10;
+        return Integer.parseInt(v);
     }
 }
