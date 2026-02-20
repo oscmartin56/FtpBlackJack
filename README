@@ -1,0 +1,27 @@
+Juego de BlackJack - Cliente/Servidor
+1. Introducción
+
+Este proyecto es un juego de BlackJack real desarrollado para la asignatura de Programación de Servicios y Procesos. Utiliza una arquitectura Cliente/Servidor donde varios jugadores pueden conectarse simultáneamente a un servidor central.
+
+2. Tecnologías Utilizadas
+
+Lenguaje: Java JDK 17.
+Comunicación: Sockets TCP (ServerSocket y Socket).
+Concurrencia: Hilos (Threads) para gestionar múltiples clientes a la vez.
+Interfaz: Java Swing para la parte visual del cliente.
+
+3. Estructura del Proyecto
+
+El código se divide en 6 archivos principales repartidos entre el equipo:
+Servidor.java: El programa que escucha las conexiones.
+HiloServidor.java: La lógica de cada partida individual.
+ClienteBlackJack.java: La ventana con la que juega el usuario.
+AccionJugador.java: Objeto para enviar jugadas (Apostar, Pedir, Plantar).
+EstadoJuego.java: Objeto para recibir el estado de la mesa (cartas y saldo).
+Baraja.java: Generador de cartas aleatorias.
+
+4. Instrucciones de Ejecución
+
+Ejecutar primero la clase Servidor.java.
+Una vez que el servidor esté listo, ejecutar la clase ClienteBlackJack.java.
+Introducir la apuesta en el cliente y pulsar "Apostar" para recibir las cartas.
