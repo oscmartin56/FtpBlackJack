@@ -1,7 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
-import java.security.MessageDigest; // IMPORTANTE: Librería para RA5 (Seguridad)
+import java.security.MessageDigest; 
 
 class HiloServidor extends Thread {
     private Socket socket;
@@ -13,17 +13,15 @@ class HiloServidor extends Thread {
 
     public HiloServidor(Socket s) { this.socket = s; }
 
-    // RA5: Método de Criptografía/Hashing para proteger la información [cite: 9, 65]
     private String aplicarSeguridad(String datos) {
         try {
-            // Usamos SHA-256 para cumplir con el apartado de cifrado/hashing 
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] hash = md.digest(datos.getBytes("UTF-8"));
             StringBuilder sb = new StringBuilder();
             for (byte b : hash) {
                 sb.append(String.format("%02x", b));
             }
-            return sb.toString(); // Retorna el resumen seguro
+            return sb.toString(); 
         } catch (Exception e) {
             return "error_seguridad";
         }
@@ -42,12 +40,10 @@ class HiloServidor extends Thread {
 
     public void run() {
         try {
-            // RA3: Gestión de flujos (Streams) [cite: 7, 23]
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
             while (true) {
-                // RA4: Protocolo de aplicación [cite: 8, 27]
                 Object obj = in.readObject();
                 if (obj instanceof AccionJugador) {
                     AccionJugador acc = (AccionJugador) obj;
@@ -89,11 +85,9 @@ class HiloServidor extends Thread {
 
                     ej.miSaldo = saldo; ej.misCartas = manoJ; ej.cartasCrupier = manoC;
                     
-                    // RA5: Aplicamos hashing al mensaje para validar la integridad del servicio 
-                    String firma = aplicarSeguridad(ej.mensaje + ej.miSaldo);
-                    ej.mensaje += " | [SECURE_ID: " + firma.substring(0, 8) + "]";
+                    String textoHash = aplicarSeguridad(ej.mensaje + ej.miSaldo);
+                    ej.mensaje += " | [Codigo Hasheado: " + textoHash.substring(0, 8) + "]";
 
-                    // RA3: Gestión de flujos y limpieza de caché [cite: 23, 64]
                     out.reset(); 
                     out.writeObject(ej);
                     out.flush(); 
@@ -102,7 +96,6 @@ class HiloServidor extends Thread {
         } catch (Exception e) {
             System.out.println("Cliente desconectado.");
         } finally {
-            // RA3: Cierre de recursos obligatorio [cite: 7, 24]
             try { if (socket != null) socket.close(); } catch (IOException e) {}
         }
     }
